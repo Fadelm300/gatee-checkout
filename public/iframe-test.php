@@ -8,7 +8,7 @@
 <body>
     <h1>Payment iframe test</h1>
 
-    <p>This is a test of the payment iframe.</p>
+    <iframe
         src="https://api01.gate-e.net/10117951198810001"
         title="Gate-E payment"
         width="100%"
