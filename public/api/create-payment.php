@@ -52,4 +52,42 @@ if (!preg_match('/^[0-9]{8}$/', $input['mobile'])) {
            exit;
              }
 
-echo json_encode(['message' => 'Validation passed. Payment is not created yet']);
+$config = require __DIR__ . '/../../app/config.php';
+$product = $config['product'];
+$pdo = null;
+
+try {
+    $pdo = require __DIR__ . '/../../app/db.php';
+    $pdo->beginTransaction();
+
+    $customer = $pdo->prepare('INSERT INTO customers (name, email, mobile) VALUES (?, ?, ?)');
+    $customer->execute([$input['name'], $input['email'], $input['mobile']]);
+
+    $payment = $pdo->prepare(
+        'INSERT INTO payments (customer_id, payment_code, amount, currency) VALUES (?, ?, ?, ?)'
+    );
+    $payment->execute([
+        $pdo->lastInsertId(),
+        $input['payment_code'],
+        $product['amount'],
+        $product['currency'],
+    ]);
+
+    $pdo->commit();
+} catch (PDOException $exception) {
+    if ($pdo !== null && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
+    if ((int) ($exception->errorInfo[1] ?? 0) === 1062) {
+        http_response_code(409);
+        echo json_encode(['message' => 'A payment attempt already exists for this checkout']);
+        exit;
+    }
+
+    http_response_code(500);
+    echo json_encode(['message' => 'Unable to save the payment attempt']);
+    exit;
+}
+
+echo json_encode(['message' => 'Payment attempt saved']);
