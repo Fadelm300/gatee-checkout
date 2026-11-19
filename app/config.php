@@ -8,4 +8,11 @@ return [
         'user' => getenv('DB_USER'),
          'password' => getenv('DB_PASSWORD'),
     ],
+
+        'product' => [
+        'name' => 'Test product',
+        'amount' => '10.000' ,
+        'currency' => 'BHD',
+    ],
+    
     ];
