@@ -9,7 +9,7 @@ $(function () {
         event.preventDefault();
 
         button.prop('disabled', true);
-        message.text('Checking your details...');
+        message.text('Checking your details 1s');
 
         $.ajax({
             url: 'api/create-payment.php',
@@ -18,7 +18,14 @@ $(function () {
             dataType: 'json' })
 
         .done(function (response) {
-            message.text(response.message); })
+            message.text(response.message);
+
+            if (response.payment_link) {
+                $('#payment-frame')
+                    .attr('src', response.payment_link)
+                    .prop('hidden', false);
+            }
+        })
             
         .fail(function (xhr) {
             const response = xhr.responseJSON;

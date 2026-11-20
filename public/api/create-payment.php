@@ -56,7 +56,7 @@ $config = require __DIR__ . '/../../app/config.php';
 $product = $config['product'];
 $pdo = null;
   require_once __DIR__ . '/../../app/payments-repository.php';
-
+    require_once __DIR__ . '/../../app/gatee.php';
 try {
     $pdo = require __DIR__ . '/../../app/db.php';
    
@@ -97,8 +97,107 @@ try {
     exit;
 }
 
-echo json_encode([
-    'message' => 'Payment attempt ready',
-    'payment_id' => (string) $paymentRecord['id'],
-    'status' => $paymentRecord['status'],
-]);
+if (
+    !empty($paymentRecord['gateway_payment_id']) &&
+    !empty($paymentRecord['payment_link'])
+) {
+    echo json_encode([
+        'message' => 'Payment ready',
+        'payment_link' => $paymentRecord['payment_link'],
+    ]);
+    exit;
+}
+
+if ($paymentRecord['status'] !== 'initiated') {
+    http_response_code(409);
+    echo json_encode([
+        'message' => 'This payment attempt needs checking before continuing.',
+    ]);
+    exit;
+}
+
+session_write_close();
+
+try {
+    if (!claimPaymentCreation($pdo, (string) $paymentRecord['id'])) {
+        http_response_code(409);
+        echo json_encode(['message' => 'Payment creation already started.']);
+        exit;
+    }
+
+    $response = gateeRequest('create', [
+        'type' => 'pay',
+        'code' => $paymentRecord['payment_code'],
+        'amount' => (float) $paymentRecord['amount'],
+        'currency' => $paymentRecord['currency'],
+        'gateway' => [
+            'id' => $config['gatee']['gateway_id'],
+        ],
+        'client' => [
+            'name' => $paymentRecord['customer_name'],
+            'email' => $paymentRecord['customer_email'],
+            'mobile_code' => '973',
+            'mobile' => $paymentRecord['customer_mobile'],
+        ],
+        'notification' => [
+            'email_send' => 0,
+            'whatsapp_send' => 0,
+            'sms_send' => 0,
+        ],
+        'settings' => [
+            'create_code' => 0,
+            'calculate_payment' => 0,
+        ],
+    ]);
+
+    if (!in_array($response['status'] ?? null, [0, 1, '0', '1'], true)) {
+        throw new RuntimeException('Missing gateway status.');
+    }
+
+    if ((int) $response['status'] === 0) {
+        // A duplicate code may belong to an earlier unconfirmed creation.
+        if (in_array($response['status_code'] ?? '', ['GATEE_300', 'GATEE_306'], true)) {
+            throw new RuntimeException('Payment reference needs checking.');
+        }
+
+        $statement = $pdo->prepare(
+            "UPDATE payments SET status = 'create_error'
+             WHERE id = ? AND status = 'creating'"
+        );
+        $statement->execute([$paymentRecord['id']]);
+
+        http_response_code(422);
+        echo json_encode(['message' => 'Gate-E could not create this payment.']);
+        exit;
+    }
+
+    $gatewayPayment = $response['data']['payment'] ?? [];
+    $gatewayId = (string) ($gatewayPayment['id'] ?? '');
+    $link = $gatewayPayment['link'] ?? '';
+
+    if (
+        !ctype_digit($gatewayId) ||
+        strlen($gatewayId) > 64 ||
+        !is_string($link) ||
+        !filter_var($link, FILTER_VALIDATE_URL) ||
+        parse_url($link, PHP_URL_SCHEME) !== 'https' ||
+        !preg_match('/(^|\.)gate-e\.(net|com|co)$/i', parse_url($link, PHP_URL_HOST) ?? '')
+    ) {
+        throw new RuntimeException('Invalid gateway payment details.');
+    }
+
+    if (!saveGatewayPayment($pdo, (string) $paymentRecord['id'], $gatewayId, $link)) {
+        throw new RuntimeException('Unable to save gateway details.');
+    }
+
+    echo json_encode([
+        'message' => 'Payment ready',
+        'payment_link' => $link,
+    ]);
+        } catch (Throwable $exception) {
+    // keep the attempt unchanged when the gateway outcome is uncertain
+            http_response_code(502);
+         echo json_encode([
+        'message' => 'Unable to confirm your payment. Please check again later.',
+      ]);
+}
