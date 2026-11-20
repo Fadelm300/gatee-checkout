@@ -18,3 +18,35 @@ function findPaymentByCode(PDO $pdo, string $code): ?array
 
      return $payment === false ? null : $payment;
 }
+function claimPaymentCreation(PDO $pdo, string $paymentId): bool
+{
+    $statement = $pdo->prepare(
+        "UPDATE payments
+         SET status = 'creating'
+         WHERE id = ? AND status = 'initiated'"
+          );
+
+    $statement->execute([$paymentId]);
+
+    return $statement->rowCount() === 1;
+}
+
+
+function saveGatewayPayment(
+    PDO $pdo,
+    string $paymentId,
+      string $gatewayId,
+    string $link
+          ): bool { 
+          $statement = $pdo->prepare(
+               "UPDATE payments
+               SET gateway_payment_id = ?,
+                    payment_link = ?,
+                    status = 'pending'
+                         WHERE id = ? AND status = 'creating'"
+                    );
+
+       $statement->execute([$gatewayId, $link, $paymentId]);
+
+    return $statement->rowCount() === 1;
+}

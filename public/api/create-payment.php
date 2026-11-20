@@ -55,11 +55,15 @@ if (!preg_match('/^[0-9]{8}$/', $input['mobile'])) {
 $config = require __DIR__ . '/../../app/config.php';
 $product = $config['product'];
 $pdo = null;
+  require_once __DIR__ . '/../../app/payments-repository.php';
 
 try {
     $pdo = require __DIR__ . '/../../app/db.php';
-    $pdo->beginTransaction();
+   
+        $existingPayment = findPaymentByCode($pdo, $input['payment_code']);
 
+        if ($existingPayment === null) {
+           $pdo->beginTransaction();  
     $customer = $pdo->prepare('INSERT INTO customers (name, email, mobile) VALUES (?, ?, ?)');
     $customer->execute([$input['name'], $input['email'], $input['mobile']]);
 
@@ -74,6 +78,9 @@ try {
     ]);
 
     $pdo->commit();
+    }
+
+    $paymentRecord = findPaymentByCode($pdo, $input['payment_code']);
 } catch (PDOException $exception) {
     if ($pdo !== null && $pdo->inTransaction()) {
         $pdo->rollBack();
@@ -90,4 +97,8 @@ try {
     exit;
 }
 
-echo json_encode(['message' => 'Payment attempt saved']);
+echo json_encode([
+    'message' => 'Payment attempt ready',
+    'payment_id' => (string) $paymentRecord['id'],
+    'status' => $paymentRecord['status'],
+]);
