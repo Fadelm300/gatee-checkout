@@ -14,5 +14,11 @@ return [
         'amount' => '10.000' ,
         'currency' => 'BHD',
     ],
+        'gatee' => [
+        'url' => getenv('GATEE_URL'),
+        'user' => getenv('GATEE_USER'),
+        'key' => getenv('GATEE_KEY'),
+        'gateway_id' => getenv('GATEE_GATEWAY_ID'),
+    ],
     
     ];
