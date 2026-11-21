@@ -104,6 +104,10 @@ if (
     echo json_encode([
         'message' => 'Payment ready',
         'payment_link' => $paymentRecord['payment_link'],
+        'result_url' => 'result.php?' . http_build_query([
+        'payment_id' => $paymentRecord['gateway_payment_id'],
+         'payment_code' => $paymentRecord['payment_code'],
+        ]),
     ]);
     exit;
 }
@@ -119,6 +123,7 @@ if ($paymentRecord['status'] !== 'initiated') {
 session_write_close();
 
 try {
+    $returnSettings = gateeReturnSettings($config['gatee']);
     if (!claimPaymentCreation($pdo, (string) $paymentRecord['id'])) {
         http_response_code(409);
         echo json_encode(['message' => 'Payment creation already started.']);
@@ -144,10 +149,7 @@ try {
             'whatsapp_send' => 0,
             'sms_send' => 0,
         ],
-        'settings' => [
-            'create_code' => 0,
-            'calculate_payment' => 0,
-        ],
+        'settings' => $returnSettings,
     ]);
 
     if (!in_array($response['status'] ?? null, [0, 1, '0', '1'], true)) {
@@ -193,9 +195,12 @@ try {
     echo json_encode([
         'message' => 'Payment ready',
         'payment_link' => $link,
+        'result_url' => 'result.php?' . http_build_query([
+        'payment_id' => $gatewayId,
+        'payment_code' => $paymentRecord['payment_code'],
+        ]),
     ]);
         } catch (Throwable $exception) {
-    // keep the attempt unchanged when the gateway outcome is uncertain
             http_response_code(502);
          echo json_encode([
         'message' => 'Unable to confirm your payment. Please check again later.',
