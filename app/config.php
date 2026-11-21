@@ -19,6 +19,8 @@ return [
         'user' => getenv('GATEE_USER'),
         'key' => getenv('GATEE_KEY'),
         'gateway_id' => getenv('GATEE_GATEWAY_ID'),
-    ],
+         'redirect_url' => getenv('GATEE_REDIRECT_URL') ?: '' ,
+        'callback_url' => getenv('GATEE_CALLBACK_URL') ?: '', 
+        ],
     
     ];
