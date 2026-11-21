@@ -7,6 +7,9 @@ services:
       - .:/var/www/html
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
   phpmyadmin:
     image: phpmyadmin:5
     ports:
@@ -17,6 +20,11 @@ services:
       - db
   db:
     image: mysql:8.4
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
