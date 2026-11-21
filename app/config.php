@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'app' => [
+    'checkout_url' => getenv('APP_CHECKOUT_URL') ?: 'checkout.php',]
+    ,
     'database' => [
         'host' => getenv('DB_HOST'),
         'port' => getenv('DB_PORT'),
