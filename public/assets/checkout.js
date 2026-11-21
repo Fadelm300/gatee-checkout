@@ -19,7 +19,11 @@ $(function () {
 
         .done(function (response) {
             message.text(response.message);
-
+                if (response.result_url) {
+                    $('#result-link')
+                        .attr('href', response.result_url)
+                        .prop('hidden', false);
+                }
             if (response.payment_link) {
                 $('#payment-frame')
                     .attr('src', response.payment_link)

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'app' => [
+    'checkout_url' => getenv('APP_CHECKOUT_URL') ?: 'checkout.php',]
+    ,
     'database' => [
         'host' => getenv('DB_HOST'),
         'port' => getenv('DB_PORT'),
@@ -19,6 +22,8 @@ return [
         'user' => getenv('GATEE_USER'),
         'key' => getenv('GATEE_KEY'),
         'gateway_id' => getenv('GATEE_GATEWAY_ID'),
-    ],
+         'redirect_url' => getenv('GATEE_REDIRECT_URL') ?: '' ,
+        'callback_url' => getenv('GATEE_CALLBACK_URL') ?: '', 
+        ],
     
     ];

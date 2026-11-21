@@ -53,3 +53,35 @@ function gateeRequest(string $action, array $payment): array
 
     return $data;
 }
+
+        function getGatewayPayment(string $id): array
+        { return gateeRequest('get', ['id' => $id]);}
+
+        function gateeReturnSettings(array $gatee): array {
+            
+            foreach (['redirect_url', 'callback_url'] as $field) {
+                $url = $gatee[$field];
+                $parts = parse_url($url);
+                $scheme = $parts['scheme'] ?? '';
+
+        $localRedirect = $field === 'redirect_url' &&
+            $scheme === 'http' &&
+            in_array($parts['host'] ?? '', ['localhost', '127.0.0.1'], true);
+
+                if (
+                    !filter_var($url, FILTER_VALIDATE_URL) ||
+                    ($scheme !== 'https' && !$localRedirect) ||
+                    isset($parts['user']) ||
+                    isset($parts['pass']) ||
+                    isset($parts['fragment']) ||
+                    isset($parts['query'])
+                ) {
+                    throw new RuntimeException('Configure valid payment return URLs.') ; }
+            }
+
+            return 
+            [  'callback_url' => $gatee['callback_url'],
+                'redirect_url' => $gatee['redirect_url'],
+                'create_code' => 0,
+                'calculate_payment' => 0, ];
+        }
