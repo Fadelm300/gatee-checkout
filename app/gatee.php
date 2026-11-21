@@ -53,3 +53,9 @@ function gateeRequest(string $action, array $payment): array
 
     return $data;
 }
+
+        function getGatewayPayment(string $id): array
+        {
+        return gateeRequest('get', ['id' => $id]);}
+
+        
