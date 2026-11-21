@@ -105,6 +105,6 @@ $title = 'Payment result';
 <?php endif; ?>
 
 <p>
-    <a href="<?= resultText($config['app']['checkout_url']) ?>" target="_top">  Return to checkou </a></p>
+    <a href="<?= resultText($config['app']['checkout_url']) ?>" target="_top">  Return to checkout </a></p>
 </body>
 </html>
