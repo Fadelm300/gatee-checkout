@@ -143,3 +143,41 @@ function savePaymentResult(PDO $pdo, array $expected, array $verified): void
         throw $exception;
     }
 }
+
+
+    function listPayments(PDO $pdo, int $page = 1, int $limit = 20): array
+       {
+          $statement = $pdo->prepare(
+            'SELECT p.id, p.payment_code, p.amount, p.currency,
+                    p.status, p.transaction_status, p.created_at,
+                 c.name AS customer_name
+            FROM payments p
+          JOIN customers c ON c.id = p.customer_id
+             ORDER BY p.id DESC
+            LIMIT ? OFFSET ?' );
+
+        $statement->bindValue(1, $limit, PDO::PARAM_INT);
+        $statement->bindValue(2, ($page - 1) * $limit, PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll();
+        }
+
+    function countPayments(PDO $pdo): int{
+    return (int) $pdo->query('SELECT COUNT(*) FROM payments')  ->fetchColumn(); }
+
+    function findPaymentById(PDO $pdo, string $id): ?array
+    {
+        $statement = $pdo->prepare(
+            'SELECT p.*, c.name AS customer_name,
+                    c.email AS customer_email,
+                    c.mobile AS customer_mobile
+            FROM payments p
+            JOIN customers c ON c.id = p.customer_id
+            WHERE p.id = ?
+            LIMIT 1' ) ;
+
+        $statement->execute([$id]);
+        $payment = $statement->fetch();
+
+        return $payment === false ? null : $payment ;
+    }

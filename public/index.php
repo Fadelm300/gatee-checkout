@@ -1,3 +1,4 @@
 <?php
 
-echo 'Gate-E application is running.';
+header('Location: checkout.php', true, 302);
+exit;
