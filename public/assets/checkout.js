@@ -9,7 +9,7 @@ $(function () {
         event.preventDefault();
 
         button.prop('disabled', true);
-        message.text('Checking your details 1s');
+        message.text('Checking your details');
 
         $.ajax({
             url: 'api/create-payment.php',
@@ -25,6 +25,7 @@ $(function () {
                         .prop('hidden', false);
                 }
             if (response.payment_link) {
+                $('#payment-area').prop('hidden', false);
                 $('#payment-frame')
                     .attr('src', response.payment_link)
                     .prop('hidden', false);
