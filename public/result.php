@@ -56,55 +56,103 @@ $title = 'Payment result';
     {return htmlspecialchars(
     (string) ($value ?? 'Not available'),
             ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');}
-    ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= resultText($title) ?></title>
-</head>
-<body>
+ ?>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title><?= resultText($title) ?> | gatee-checkout</title>
+            <link rel="stylesheet" href="assets/app.css">
+        </head>
+        <body>
+            <header class="topbar">
+                <div class="topbar-inner">
+                    <a class="brand" href="checkout.php" target="_top">
+                        gatee-checkout
+                    </a>
 
+                    <nav class="app-nav" aria-label="Main navigation">
+                        <a href="checkout.php" target="_top">Checkout</a>
+                        <a href="payments.php" target="_top">Payments</a>
+                    </nav>
+                </div>
+            </header>
 
-<h1><?= resultText($title) ?></h1>
-<?php if ($notice !== ''): ?>
-    <p role="alert"><?= resultText($notice)  ?></p>
-<?php endif; ?>
+            <main class="page">
+                <section class="panel result-panel">
+                    <div class="result-intro">
+                        <?php if ($notice === '' && $payment !== null): ?>
+                            <span class="status-label status-label--<?= $payment['status'] === 'paid'
+                                ? 'paid'
+                                : (in_array($payment['transaction_status'], ['failed', 'declined'], true)
+                                    ? 'failed'
+                                    : 'pending') ?>">
+                                <?= resultText($payment['status']) ?>
+                            </span>
+                        <?php endif; ?>
 
+                        <h1>
+                            <?= resultText($notice !== '' ? 'Payment confirmation unavailable' : $title) ?>
+                        </h1>
 
+                        <?php if ($notice !== ''): ?>
+                            <p class="notice" role="alert">
+                                <?= resultText($notice) ?>
+                            </p>
+                        <?php endif; ?>
 
-  <?php if ($payment !== null): ?>
- <p>The details below are the last result verified with Gate-E.</p>
+                        <?php if ($payment !== null): ?>
+                            <p class="subtitle">
+                                The details below are the last result verified with Gate-E.
+                            </p>
+                        <?php endif; ?>
+                    </div>
 
-    <table>
-        <tbody>
-        <?php foreach ([
-            'Payment reference' => 'payment_code',
-            'Gateway payment ID' => 'gateway_payment_id',
-            'Amount' => 'amount',
-            'Currency' => 'currency',
-            'Payment status' => 'status',
-            'Transaction ID' => 'transaction_id',
-            'Transaction status' => 'transaction_status',
-            'Transaction time' => 'transaction_date',
-            'Gateway response code' => 'response_code',
-            'Gateway response' => 'response_message',
-        ] as $label => $field): ?>
-                 <tr>
-                <th scope="row"><?= resultText($label) ?></th>
-                <td data-field="<?= resultText($field) ?>"><?= resultText($payment[$field]) ?></td>
-                 </tr>
-        <?php endforeach; ?>
- </tbody>
-     </table>
-  <?php endif; ?>
+                    <?php if ($payment !== null): ?>
+                        <table class="result-table">
+                            <tbody>
+                                <?php foreach ([
+                                    'Payment reference' => 'payment_code',
+                                    'Gateway payment ID' => 'gateway_payment_id',
+                                    'Amount' => 'amount',
+                                    'Currency' => 'currency',
+                                    'Payment status' => 'status',
+                                    'Transaction ID' => 'transaction_id',
+                                    'Transaction status' => 'transaction_status',
+                                    'Transaction time' => 'transaction_date',
+                                    'Gateway response code' => 'response_code',
+                                    'Gateway response' => 'response_message',
+                                ] as $label => $field): ?>
+                                    <tr>
+                                        <th scope="row">
+                                            <?= resultText($label) ?>
+                                        </th>
+                                        <td data-field="<?= resultText($field) ?>">
+                                            <?= resultText($payment[$field]) ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
 
-<?php if ($refreshUrl !== ''): ?>
-    <p><a href="<?= resultText($refreshUrl) ?>">Check again</a></p>
-<?php endif; ?>
+                    <div class="result-actions">
+                        <?php if ($refreshUrl !== ''): ?>
+                            <a class="button" href="<?= resultText($refreshUrl) ?>">
+                                Check again
+                            </a>
+                        <?php endif; ?>
 
-<p>
-    <a href="<?= resultText($config['app']['checkout_url']) ?>" target="_top">  Return to checkout </a></p>
-</body>
-</html>
+                        <a
+                            class="button button--quiet"
+                            href="<?= resultText($config['app']['checkout_url']) ?>"
+                            target="_top"
+                        >
+                            Return to checkout
+                        </a>
+                    </div>
+                </section>
+            </main>
+        </body>
+        </html>
