@@ -18,6 +18,8 @@ The callback and result page share the verification and save logic. Opening **Vi
 
 `customers` stores the customer's name, email and mobile. `payments` links to the customer through `customer_id` and stores the gateway reference, amount, statuses and transaction details. Amounts use `DECIMAL`.
 
+![Database ERD](docs/images/erd.png)
+
 ![Verified payment stored in MySQL](docs/images/database.png)
 
 ![Database and Gate-E comparison](docs/images/payment-details.jpg)
